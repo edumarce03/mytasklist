@@ -1,0 +1,73 @@
+<div class="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+  <div
+    class="max-w-md mx-auto bg-gray-800 rounded-xl shadow-2xl overflow-hidden"
+  >
+    @if (currentUser()) {
+    <div class="p-8">
+      <div class="flex justify-center">
+        @if (currentUser()?.photoURL) {
+        <img
+          class="h-24 w-24 rounded-full object-cover border-2 border-indigo-500"
+          src="{{ currentUser()?.photoURL }}"
+          alt="Foto de perfil"
+        />
+        } @else {
+        <div
+          class="h-24 w-24 rounded-full bg-indigo-900 flex items-center justify-center border-2 border-indigo-500"
+        >
+          <i class="fas fa-user text-4xl text-indigo-300"></i>
+        </div>
+        }
+      </div>
+
+      <div class="text-center mt-6">
+        <h1 class="text-2xl font-semibold text-white font-inter">
+          @if (currentUser()?.displayName) {
+          {{ currentUser()?.displayName }}
+          } @else { Usuario }
+        </h1>
+        <p class="text-indigo-300 mt-1 font-inter">
+          {{ currentUser()?.email }}
+        </p>
+      </div>
+
+      <div class="mt-8">
+        <div class="border-t border-gray-700 py-4">
+          <h3 class="text-lg font-medium text-white font-inter">
+            Información de la cuenta
+          </h3>
+          <dl class="mt-4 text-sm">
+            <div class="bg-gray-700 rounded-lg p-4 mt-2">
+              <dt class="font-medium text-gray-300 font-inter">
+                ID de usuario:
+              </dt>
+              <dd class="mt-1 text-white break-all">
+                {{ currentUser()?.uid }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <button
+          (click)="logout()"
+          class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors font-inter"
+        >
+          <i class="fas fa-sign-out-alt mr-2"></i>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+    } @else {
+    <div class="p-8 text-center">
+      <div class="flex justify-center mb-4">
+        <i class="fas fa-spinner fa-spin text-3xl text-indigo-400"></i>
+      </div>
+      <p class="text-gray-300 font-inter">
+        Cargando información del usuario...
+      </p>
+    </div>
+    }
+  </div>
+</div>
