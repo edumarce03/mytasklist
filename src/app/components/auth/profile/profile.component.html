@@ -1,43 +1,47 @@
-<div class="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+<div
+  class="min-h-screen bg-gradient-to-r from-black to-cyan-950 py-12 px-4 sm:px-6 lg:px-8"
+>
   <div
-    class="max-w-md mx-auto bg-gray-800 rounded-xl shadow-2xl overflow-hidden"
+    class="max-w-md mx-auto rounded-lg bg-transparent border border-white/50 shadow-xl overflow-hidden"
   >
     @if (currentUser()) {
-    <div class="p-8">
+    <div class="p-6 md:p-8">
       <div class="flex justify-center">
         @if (currentUser()?.photoURL) {
         <img
-          class="h-24 w-24 rounded-full object-cover border-2 border-indigo-500"
+          class="h-24 w-24 rounded-full object-cover border-2 border-gray-200"
           src="{{ currentUser()?.photoURL }}"
           alt="Foto de perfil"
         />
         } @else {
         <div
-          class="h-24 w-24 rounded-full bg-indigo-900 flex items-center justify-center border-2 border-indigo-500"
+          class="h-24 w-24 rounded-full bg-cyan-900/50 flex items-center justify-center border-2 border-gray-200"
         >
-          <i class="fas fa-user text-4xl text-indigo-300"></i>
+          <i class="fas fa-user text-4xl text-gray-200"></i>
         </div>
         }
       </div>
 
       <div class="text-center mt-6">
-        <h1 class="text-2xl font-semibold text-white font-inter">
+        <h1 class="text-xl md:text-2xl font-semibold text-white font-inter">
           @if (currentUser()?.displayName) {
           {{ currentUser()?.displayName }}
           } @else { Usuario }
         </h1>
-        <p class="text-indigo-300 mt-1 font-inter">
+        <p class="text-gray-300 mt-1 font-inter text-sm">
           {{ currentUser()?.email }}
         </p>
       </div>
 
       <div class="mt-8">
-        <div class="border-t border-gray-700 py-4">
+        <div class="border-t border-gray-400/30 py-4">
           <h3 class="text-lg font-medium text-white font-inter">
             Información de la cuenta
           </h3>
           <dl class="mt-4 text-sm">
-            <div class="bg-gray-700 rounded-lg p-4 mt-2">
+            <div
+              class="bg-black/30 rounded-lg p-4 mt-2 border border-gray-200/30"
+            >
               <dt class="font-medium text-gray-300 font-inter">
                 ID de usuario:
               </dt>
@@ -52,7 +56,7 @@
       <div class="mt-8">
         <button
           (click)="logout()"
-          class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors font-inter"
+          class="w-full flex justify-center items-center py-4 px-4 border-0 text-sm md:text-base font-medium rounded-md text-white bg-red-700 hover:bg-red-600 transition-all duration-200 font-inter"
         >
           <i class="fas fa-sign-out-alt mr-2"></i>
           Cerrar sesión
@@ -62,7 +66,7 @@
     } @else {
     <div class="p-8 text-center">
       <div class="flex justify-center mb-4">
-        <i class="fas fa-spinner fa-spin text-3xl text-indigo-400"></i>
+        <i class="fas fa-spinner fa-spin text-3xl text-gray-300"></i>
       </div>
       <p class="text-gray-300 font-inter">
         Cargando información del usuario...

@@ -8,10 +8,10 @@
       <h2
         class="text-xl md:text-3xl font-bold text-white font-inter tracking-tight"
       >
-        Bienvenido
+        Crear cuenta
       </h2>
       <p class="text-gray-300 font-inter text-xs md:text-sm">
-        Ingresa tus credenciales para continuar
+        Regístrate para acceder a la aplicación
       </p>
     </div>
 
@@ -24,7 +24,7 @@
     </div>
     }
 
-    <form class="space-y-8" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form class="space-y-8" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="space-y-6">
         <div>
           <label
@@ -50,8 +50,8 @@
               placeholder="tu@correo.com"
             />
           </div>
-          @if (loginForm.get('email')?.invalid &&
-          loginForm.get('email')?.touched) {
+          @if (registerForm.get('email')?.invalid &&
+          registerForm.get('email')?.touched) {
           <p class="mt-2 text-sm text-red-400 pl-1">
             Por favor ingresa un correo electrónico válido
           </p>
@@ -76,16 +76,48 @@
               id="password"
               name="password"
               type="password"
-              autocomplete="current-password"
+              autocomplete="new-password"
               required
               class="text-xs md:text-sm appearance-none block w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-lg bg-transparent placeholder-gray-200 text-white transition-all duration-200"
               placeholder="••••••••"
             />
           </div>
-          @if (loginForm.get('password')?.invalid &&
-          loginForm.get('password')?.touched) {
+          @if (registerForm.get('password')?.invalid &&
+          registerForm.get('password')?.touched) {
           <p class="mt-2 text-sm text-red-400 pl-1">
             La contraseña debe tener al menos 6 caracteres
+          </p>
+          }
+        </div>
+
+        <div>
+          <label
+            for="confirmPassword"
+            class="block text-xs md:text-sm font-medium text-white font-inter mb-3"
+          >
+            Confirmar contraseña
+          </label>
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+            >
+              <i class="fas fa-lock text-gray-200"></i>
+            </div>
+            <input
+              formControlName="confirmPassword"
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              required
+              class="text-xs md:text-sm appearance-none block w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-lg bg-transparent placeholder-gray-200 text-white transition-all duration-200"
+              placeholder="••••••••"
+            />
+          </div>
+          @if (registerForm.hasError('passwordMismatch') &&
+          registerForm.get('confirmPassword')?.touched) {
+          <p class="mt-2 text-sm text-red-400 pl-1">
+            Las contraseñas no coinciden
           </p>
           }
         </div>
@@ -94,42 +126,25 @@
       <div>
         <button
           type="submit"
-          [disabled]="loginForm.invalid || isLoading()"
+          [disabled]="registerForm.invalid || isLoading()"
           class="group relative w-full flex justify-center py-4 px-4 border-0 text-sm md:text-base font-medium rounded-md text-white bg-cyan-800 hover:bg-cyan-700 focus:outline-none disabled:bg-gradient-to-r disabled:from-cyan-700 disabled:to-cyan-800 disabled:cursor-not-allowed transition-all duration-200"
         >
           @if (isLoading()) {
           <i class="fas fa-spinner fa-spin mr-2"></i>
-          Procesando... } @else { Iniciar sesión }
+          Procesando... } @else { Crear cuenta }
         </button>
       </div>
 
-      <div class="relative flex justify-center text-sm">
-        <span class="px-4 bg-transparent text-gray-300 font-inter"
-          >o continúa con</span
-        >
-      </div>
-
-      <div>
-        <button
-          type="button"
-          (click)="loginWithGoogle()"
-          class="w-full flex justify-center items-center px-4 py-4 text-sm md:text-base font-medium rounded-md text-white bg-black/50 hover:bg-cyan-600/20 hover:border-none transition-all duration-200"
-        >
-          <img src="assets/google.svg" alt="Google logo" class="h-5 w-5 mr-3" />
-          Iniciar sesión con Google
-        </button>
+      <div class="text-center">
+        <p class="text-gray-300 text-xs md:text-sm font-inter">
+          ¿Ya tienes una cuenta?
+          <a
+            routerLink="/login"
+            class="text-cyan-400 hover:text-cyan-300 font-medium"
+            >Iniciar sesión</a
+          >
+        </p>
       </div>
     </form>
-
-    <div class="text-center mt-6">
-      <p class="text-gray-300 text-xs md:text-sm font-inter">
-        ¿No tienes una cuenta?
-        <a
-          routerLink="/register"
-          class="text-cyan-400 hover:text-cyan-300 font-medium"
-          >Registrarse</a
-        >
-      </p>
-    </div>
   </div>
 </div>
