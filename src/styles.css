@@ -1,6 +1,8 @@
 /* Inter - Google Font */
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
+@import "@ctrl/ngx-emoji-mart/picker";
+
 /* You can add global styles to this file, and also import other style files */
 @tailwind base;
 @tailwind components;
