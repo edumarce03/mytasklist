@@ -40,7 +40,7 @@ import { CommonModule } from '@angular/common';
       <div class="flex items-center gap-3">
         <button
           (click)="authService.logout()"
-          class="px-4 py-2 bg-gray-800/70 hover:bg-red-700/80 text-gray-200 rounded-md border border-gray-700 text-sm flex items-center gap-2 transition-colors duration-200 hover:text-white"
+          class="px-4 py-2 bg-red-700 text-gray-200 rounded-md font-medium text-sm flex items-center gap-2 transition-all duration-300 hover:text-white"
         >
           <i class="fas fa-sign-out-alt"></i>
           <span>Cerrar sesión</span>

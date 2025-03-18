@@ -1,99 +1,78 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ListService } from '../../../services/list.service';
+import { AuthService } from '../../../services/auth.service';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskList } from '../../../models/list.model';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
+import { ModalService } from '../../../services/modal.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [RouterLink, FormsModule, CommonModule, PickerComponent],
   template: `
-    <aside class="h-full flex flex-col bg-black text-gray-100">
-      <div class="p-5 flex justify-between items-center ">
-        <h2 class="text-lg font-semibold text-white">Lista de Tareas</h2>
+    <aside
+      class="h-full flex flex-col bg-neutral-800 text-gray-100 transition-all duration-300"
+      [class.w-20]="sidebarCollapsed()"
+      [class.md:w-80]="!sidebarCollapsed()"
+    >
+      <!-- Header Section -->
+      <div
+        class="p-6 flex justify-between items-center border-b border-gray-100/40"
+      >
+        <h2
+          class="text-lg font-semibold text-white"
+          [class.hidden]="sidebarCollapsed()"
+        >
+          Lista de Tareas
+        </h2>
         <button
-          (click)="toggleCreateForm()"
-          class="bg-gray-600 text-white w-6 h-6 flex items-center justify-center rounded-full transition-colors text-xs
-          "
+          (click)="toggleSidebar()"
+          class="bg-neutral-500/80 text-white w-6 h-6 flex items-center justify-center rounded transition-colors hover:bg-neutral-600/80"
+          title="{{ sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú' }}"
         >
           <i
-            class="fas"
-            [class.fa-plus]="!showCreateForm"
-            [class.fa-times]="showCreateForm"
+            class="fas text-xs"
+            [class.fa-bars]="sidebarCollapsed()"
+            [class.fa-chevron-left]="!sidebarCollapsed()"
           ></i>
         </button>
       </div>
 
-      <!-- Create form -->
-      @if (showCreateForm) {
-      <div class="px-6 py-6 border-b border-gray-700 ">
-        <form (submit)="createList(); $event.preventDefault()">
-          <h2 class="text-lg font-semibold text-white my-3">Crear una Lista</h2>
-
-          <div class="flex items-center gap-2 mb-4">
-            <button
-              type="button"
-              (click)="showEmojiPicker = !showEmojiPicker"
-              class="bg-transparent border border-gray-700 focus:outline-none focus:border-cyan-600 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-            >
-              {{ selectedEmoji || '😀' }}
-            </button>
-            <input
-              type="text"
-              [(ngModel)]="newListName"
-              name="listName"
-              placeholder="Nombre de la lista"
-              class="flex-1 px-3 py-2 bg-transparent border border-gray-700 rounded text-sm text-gray-200 focus:outline-none focus:border-cyan-600"
-            />
-          </div>
-
-          @if (showEmojiPicker) {
-          <div class="relative z-10 mb-4">
-            <emoji-mart
-              [enableSearch]="true"
-              [showPreview]="true"
-              [darkMode]="true"
-              [emojiSize]="20"
-              (emojiSelect)="selectEmoji($event)"
-              title="Selecciona un emoji"
-              class="block rounded-md overflow-hidden"
-              [style]="{ width: '100%' }"
-            ></emoji-mart>
-          </div>
-          }
-
-          <div class="flex justify-end">
-            <button
-              type="submit"
-              [disabled]="!newListName.trim()"
-              class="px-4 py-2 bg-cyan-800 text-white rounded text-sm hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              Crear
-            </button>
-          </div>
-        </form>
+      <!-- Lists Header with Create Button -->
+      <div class="p-6 flex justify-between items-center">
+        @if (!sidebarCollapsed()) {
+        <h3 class="text-base font-semibold text-gray-300">Mis listas</h3>
+        }
+        <button
+          (click)="openCreateListModal()"
+          class="bg-neutral-500/80 hover:bg-neutral-600/80 text-white w-6 h-6 flex items-center justify-center rounded transition-colors"
+          title="Crear nueva lista"
+        >
+          <i class="fas fa-plus text-xs"></i>
+        </button>
       </div>
-      }
 
       <!-- Lists -->
-      <div class="flex-1 overflow-y-auto">
+      <div
+        class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent"
+      >
         <ul class="space-y-1 p-2">
           @for (list of listService.lists(); track list.id) {
           <li class="group">
             <div
-              class="flex items-center justify-between px-4 py-4 rounded hover:bg-cyan-900/50 transition-colors"
+              class="flex items-center justify-between px-3 py-3 rounded hover:bg-neutral-600/50 transition-colors hover:rounded-md"
             >
-              @if (editingListId === list.id) {
-              <div class="flex items-center gap-2 flex-1">
+              @if (editingListId === list.id && !sidebarCollapsed()) {
+              <div class="flex items-center gap-2 flex-1 max-w-full">
                 <button
                   type="button"
                   (click)="showEmojiPickerForEdit = !showEmojiPickerForEdit"
-                  class="bg-transparent flex items-center justify-center transition-colors"
+                  class="flex-shrink-0 bg-transparent flex items-center justify-center transition-colors"
                 >
-                  <span class="text-2xl">{{
+                  <span class="text-xl">{{
                     editedEmoji || list.emoji || '📝'
                   }}</span>
                 </button>
@@ -104,6 +83,7 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
                   class="bg-transparent w-full py-1 text-sm text-white focus:outline-none"
                   (keydown.enter)="saveListName(list.id)"
                   (keydown.escape)="cancelEditing()"
+                  maxlength="50"
                   #editInput
                 />
               </div>
@@ -111,16 +91,20 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
               <a
                 [routerLink]="['/profile/list', list.id]"
                 routerLinkActive="text-cyan-400 font-medium"
-                class="flex items-center gap-2 flex-1"
+                class="flex items-center gap-2 flex-1 min-w-0"
+                title="{{ list.name }}"
               >
-                <span class="text-2xl">{{ list.emoji || '📝' }}</span>
+                <span class="text-xl flex-shrink-0">{{
+                  list.emoji || '📝'
+                }}</span>
+                @if (!sidebarCollapsed()) {
                 <span class="text-sm truncate">{{ list.name }}</span>
+                }
               </a>
-              }
-
-              <div class="flex gap-2">
+              } @if (!sidebarCollapsed()) {
+              <div class="flex gap-1 ml-1 flex-shrink-0">
                 @if (editingListId === list.id) {
-                <div class="flex gap-2">
+                <div class="flex gap-1">
                   <button
                     (click)="saveListName(list.id)"
                     class="bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30 w-7 h-7 flex items-center justify-center rounded transition-colors text-xs"
@@ -137,7 +121,9 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
                   </button>
                 </div>
                 } @else {
-                <div class="flex gap-2">
+                <div
+                  class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
                   <button
                     (click)="startEditing(list)"
                     class="bg-gray-600/20 text-gray-300 hover:bg-gray-600/30 w-7 h-7 flex items-center justify-center rounded transition-colors text-xs"
@@ -155,9 +141,11 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
                 </div>
                 }
               </div>
+              }
             </div>
 
-            @if (editingListId === list.id && showEmojiPickerForEdit) {
+            @if (editingListId === list.id && showEmojiPickerForEdit &&
+            !sidebarCollapsed()) {
             <div class="py-1 mt-1 mb-2 relative z-10">
               <emoji-mart
                 [enableSearch]="true"
@@ -175,17 +163,72 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
           }
         </ul>
       </div>
+
+      <!-- User profile footer -->
+      <div class="mt-auto border-t border-gray-100/40 p-3">
+        @if (authService.currentUser()) {
+        <div
+          class="flex items-center justify-between gap-2"
+          [class.flex-col]="sidebarCollapsed()"
+        >
+          <div
+            class="flex items-center gap-2"
+            [class.flex-col]="sidebarCollapsed()"
+          >
+            <div class="relative">
+              <img
+                [src]="
+                  authService.currentUser()?.photoURL ||
+                  'assets/default-avatar.png'
+                "
+                alt="Profile"
+                class="w-8 h-8 rounded-full border-2 border-cyan-700 object-cover shadow-md"
+              />
+              <div
+                class="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-black"
+              ></div>
+            </div>
+            @if (!sidebarCollapsed()) {
+            <div class="flex flex-col">
+              <span
+                class="text-xs font-medium text-white truncate max-w-[150px]"
+              >
+                {{ authService.currentUser()?.displayName || 'Usuario' }}
+              </span>
+              <span class="text-xs text-gray-400 truncate max-w-[150px]">
+                {{ authService.currentUser()?.email }}
+              </span>
+            </div>
+            }
+          </div>
+
+          <button
+            (click)="authService.logout()"
+            [class.mt-2]="sidebarCollapsed()"
+            class="flex items-center justify-center gap-1 bg-red-700 hover:bg-red-600 text-white rounded transition-all"
+            [class.p-2]="sidebarCollapsed()"
+            [class.px-3]="!sidebarCollapsed()"
+            [class.py-1]="!sidebarCollapsed()"
+            title="Cerrar sesión"
+          >
+            <i class="fas fa-sign-out-alt text-xs"></i>
+            @if (!sidebarCollapsed()) {
+            <span class="text-xs">Salir</span>
+            }
+          </button>
+        </div>
+        }
+      </div>
     </aside>
   `,
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   listService = inject(ListService);
+  authService = inject(AuthService);
+  modalService = inject(ModalService);
 
-  // Nueva lista
-  newListName = '';
-  selectedEmoji = '';
-  showCreateForm = false;
-  showEmojiPicker = false;
+  // Sidebar state
+  sidebarCollapsed = signal(false);
 
   // Edición
   editingListId: string | null = null;
@@ -193,18 +236,22 @@ export class SidebarComponent {
   editedEmoji = '';
   showEmojiPickerForEdit = false;
 
-  toggleCreateForm() {
-    this.showCreateForm = !this.showCreateForm;
-    if (!this.showCreateForm) {
-      this.showEmojiPicker = false;
-      this.newListName = '';
-      this.selectedEmoji = '';
+  ngOnInit() {
+    // Inicializar sidebar en modo colapsado para dispositivos móviles
+    this.sidebarCollapsed.set(window.innerWidth < 768);
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed.update((state) => !state);
+
+    // Si estamos colapsando y hay edición activa, cancelarla
+    if (this.sidebarCollapsed()) {
+      this.cancelEditing();
     }
   }
 
-  selectEmoji(event: any) {
-    this.selectedEmoji = event.emoji.native;
-    this.showEmojiPicker = false;
+  openCreateListModal() {
+    this.modalService.openCreateListModal();
   }
 
   selectEmojiForEdit(event: any) {
@@ -212,17 +259,19 @@ export class SidebarComponent {
     this.showEmojiPickerForEdit = false;
   }
 
-  createList() {
-    if (this.newListName.trim()) {
-      this.listService.createList(this.newListName, this.selectedEmoji);
-      this.newListName = '';
-      this.selectedEmoji = '';
-      this.showEmojiPicker = false;
-      this.showCreateForm = false;
+  startEditing(list: TaskList) {
+    // Si el sidebar está colapsado, expandirlo primero
+    if (this.sidebarCollapsed()) {
+      this.sidebarCollapsed.set(false);
+      setTimeout(() => {
+        this.setEditingMode(list);
+      }, 300); // Esperar a que termine la transición
+    } else {
+      this.setEditingMode(list);
     }
   }
 
-  startEditing(list: TaskList) {
+  private setEditingMode(list: TaskList) {
     this.editingListId = list.id || null;
     this.editedListName = list.name;
     this.editedEmoji = list.emoji || '';

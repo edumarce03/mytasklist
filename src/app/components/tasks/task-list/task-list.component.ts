@@ -12,185 +12,223 @@ import { CommonModule, DatePipe, NgClass } from '@angular/common';
   selector: 'app-task-list',
   imports: [TaskCardComponent, TaskFormComponent, CommonModule],
   template: `
-    <div class="mx-auto p-4">
-      <div class="mb-6">
-        <p class="text-5xl mb-2">{{ currentListEmoji }}</p>
-
-        <h2 class="text-2xl font-semibold text-gray-300">
-          {{ currentListName }}
-        </h2>
-        <p class="text-sm text-gray-500">
-          {{ taskService.tasks().length }} tarea(s)
-        </p>
+    <div class="mx-auto">
+      <!-- Header Section -->
+      <div class="my-6 pb-4 flex items-center gap-4">
+        <p class="text-5xl leading-none">{{ currentListEmoji }}</p>
+        <div class="flex flex-col">
+          <h2 class="text-2xl font-semibold text-gray-200">
+            {{ currentListName }}
+          </h2>
+          <p class="text-sm text-gray-500">
+            {{ taskService.tasks().length }} tarea(s)
+          </p>
+        </div>
       </div>
 
-      <!-- Task Columns -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Task Columns Container -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+        <!-- Divisor Lines (visible solo en md y superior) -->
+        <div
+          class="hidden lg:block absolute h-full w-px bg-gray-700/50 left-1/3"
+        ></div>
+        <div
+          class="hidden lg:block absolute h-full w-px bg-gray-700/50 left-2/3"
+        ></div>
+
         <!-- Pending Column -->
-        <div class="bg-gray-900 shadow rounded-lg p-4 border border-gray-800">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-300">Pendientes</h3>
-            <span
-              class="px-2 py-1 bg-gray-800 text-gray-400 text-xs rounded-full"
+        <div class="px-4">
+          <!-- Column Header -->
+          <div class="flex justify-between items-center mb-5">
+            <div class="flex items-center">
+              <div
+                class="flex items-center rounded-full bg-yellow-900/20 px-3 py-1.5"
+              >
+                <span
+                  class="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-2"
+                ></span>
+                <span class="text-yellow-200 font-medium text-xs">Pending</span>
+              </div>
+              <span
+                class="ml-1 px-2 py-0.5 bg-gray-800 text-gray-400 text-[10px] rounded-full"
+              >
+                {{ getPendingTasks().length }}
+              </span>
+            </div>
+
+            <button
+              *ngIf="addingColumn !== TaskStatus.PENDING"
+              (click)="addingColumn = TaskStatus.PENDING"
+              class="text-gray-300 transition-colors text-xs font-medium flex items-center"
             >
-              {{ getPendingTasks().length }}
-            </span>
+              <i class="fas fa-plus mr-1.5"></i> Añadir
+            </button>
           </div>
 
+          <!-- Add Task Form -->
+          <div *ngIf="addingColumn === TaskStatus.PENDING" class="mb-4">
+            <app-task-form
+              [columnStatus]="TaskStatus.PENDING"
+              [listId]="currentListId!"
+              (onSave)="saveTask($event)"
+              (onCancel)="addingColumn = null"
+            >
+            </app-task-form>
+          </div>
+
+          <!-- Tasks Container -->
           <div
-            class="min-h-[200px] task-column"
-            (dragover)="onDragOver($event)"
+            class="min-h-[200px] transition-all duration-200"
+            [ngClass]="{
+              'bg-gray-800/20 rounded-lg p-2': dropTarget === TaskStatus.PENDING
+            }"
+            (dragover)="onDragOver($event, TaskStatus.PENDING)"
+            (dragleave)="onDragLeave()"
             (drop)="onDrop($event, TaskStatus.PENDING)"
           >
             <!-- Task Cards -->
-            <app-task-card
-              *ngFor="let task of getPendingTasks()"
-              [task]="task"
-              (onDelete)="deleteTask($event)"
-              (onDragStart)="currentDraggedTask = task"
-            >
-            </app-task-card>
-
-            <!-- Add Task Form -->
-            <div *ngIf="addingColumn === TaskStatus.PENDING; else addButton">
-              <app-task-form
-                [columnStatus]="TaskStatus.PENDING"
-                [listId]="currentListId!"
-                (onSave)="saveTask($event)"
-                (onCancel)="addingColumn = null"
+            <div class="space-y-3">
+              <app-task-card
+                *ngFor="let task of getPendingTasks()"
+                [task]="task"
+                (onDelete)="deleteTask($event)"
+                (onDragStart)="startDrag($event)"
               >
-              </app-task-form>
+              </app-task-card>
             </div>
-
-            <ng-template #addButton>
-              <button
-                (click)="addingColumn = TaskStatus.PENDING"
-                class="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-md flex items-center justify-center transition-colors"
-              >
-                <i class="fas fa-plus mr-2"></i> Añadir tarea
-              </button>
-            </ng-template>
           </div>
         </div>
 
         <!-- In Progress Column -->
-        <div class="bg-gray-900 shadow rounded-lg p-4 border border-gray-800">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-300">En Progreso</h3>
-            <span
-              class="px-2 py-1 bg-gray-800 text-gray-400 text-xs rounded-full"
+        <div class="px-4">
+          <!-- Column Header -->
+          <div class="flex justify-between items-center mb-5">
+            <div class="flex items-center">
+              <div
+                class="flex items-center rounded-full bg-blue-900/20 px-3 py-1.5"
+              >
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2"></span>
+                <span class="text-blue-200 font-medium text-xs"
+                  >In Progress</span
+                >
+              </div>
+              <span
+                class="ml-1 px-2 py-0.5 bg-gray-800 text-gray-400 text-[10px] rounded-full"
+              >
+                {{ getInProgressTasks().length }}
+              </span>
+            </div>
+
+            <button
+              *ngIf="addingColumn !== TaskStatus.IN_PROGRESS"
+              (click)="addingColumn = TaskStatus.IN_PROGRESS"
+              class="text-gray-300 hover:text-gray-400 transition-colors text-xs font-medium flex items-center"
             >
-              {{ getInProgressTasks().length }}
-            </span>
+              <i class="fas fa-plus mr-1.5"></i> Añadir
+            </button>
           </div>
 
+          <!-- Add Task Form -->
+          <div *ngIf="addingColumn === TaskStatus.IN_PROGRESS" class="mb-4">
+            <app-task-form
+              [columnStatus]="TaskStatus.IN_PROGRESS"
+              [listId]="currentListId!"
+              (onSave)="saveTask($event)"
+              (onCancel)="addingColumn = null"
+            >
+            </app-task-form>
+          </div>
+
+          <!-- Tasks Container -->
           <div
-            class="min-h-[200px] task-column"
-            (dragover)="onDragOver($event)"
+            class="min-h-[200px] transition-all duration-200"
+            [ngClass]="{
+              'bg-gray-800/20 rounded-lg p-2':
+                dropTarget === TaskStatus.IN_PROGRESS
+            }"
+            (dragover)="onDragOver($event, TaskStatus.IN_PROGRESS)"
+            (dragleave)="onDragLeave()"
             (drop)="onDrop($event, TaskStatus.IN_PROGRESS)"
           >
             <!-- Task Cards -->
-            <app-task-card
-              *ngFor="let task of getInProgressTasks()"
-              [task]="task"
-              (onDelete)="deleteTask($event)"
-              (onDragStart)="currentDraggedTask = task"
-            >
-            </app-task-card>
-
-            <!-- Add Task Form -->
-            <div
-              *ngIf="
-                addingColumn === TaskStatus.IN_PROGRESS;
-                else addButtonProgress
-              "
-            >
-              <app-task-form
-                [columnStatus]="TaskStatus.IN_PROGRESS"
-                [listId]="currentListId!"
-                (onSave)="saveTask($event)"
-                (onCancel)="addingColumn = null"
+            <div class="space-y-3">
+              <app-task-card
+                *ngFor="let task of getInProgressTasks()"
+                [task]="task"
+                (onDelete)="deleteTask($event)"
+                (onDragStart)="startDrag($event)"
               >
-              </app-task-form>
+              </app-task-card>
             </div>
-
-            <ng-template #addButtonProgress>
-              <button
-                (click)="addingColumn = TaskStatus.IN_PROGRESS"
-                class="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-md flex items-center justify-center transition-colors"
-              >
-                <i class="fas fa-plus mr-2"></i> Añadir tarea
-              </button>
-            </ng-template>
           </div>
         </div>
 
         <!-- Completed Column -->
-        <div class="bg-gray-900 shadow rounded-lg p-4 border border-gray-800">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-300">Completadas</h3>
-            <span
-              class="px-2 py-1 bg-gray-800 text-gray-400 text-xs rounded-full"
+        <div class="px-4">
+          <!-- Column Header -->
+          <div class="flex justify-between items-center mb-5">
+            <div class="flex items-center">
+              <div
+                class="flex items-center rounded-full bg-green-900/20 px-3 py-1.5"
+              >
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>
+                <span class="text-green-200 font-medium text-xs"
+                  >Completed</span
+                >
+              </div>
+              <span
+                class="ml-1 px-2 py-0.5 bg-gray-800 text-gray-400 text-[10px] rounded-full"
+              >
+                {{ getCompletedTasks().length }}
+              </span>
+            </div>
+
+            <button
+              *ngIf="addingColumn !== TaskStatus.COMPLETED"
+              (click)="addingColumn = TaskStatus.COMPLETED"
+              class="text-gray-300 hover:text-gray-400 transition-colors text-xs font-medium flex items-center"
             >
-              {{ getCompletedTasks().length }}
-            </span>
+              <i class="fas fa-plus mr-1.5"></i> Añadir
+            </button>
           </div>
 
+          <!-- Add Task Form -->
+          <div *ngIf="addingColumn === TaskStatus.COMPLETED" class="mb-4">
+            <app-task-form
+              [columnStatus]="TaskStatus.COMPLETED"
+              [listId]="currentListId!"
+              (onSave)="saveTask($event)"
+              (onCancel)="addingColumn = null"
+            >
+            </app-task-form>
+          </div>
+
+          <!-- Tasks Container -->
           <div
-            class="min-h-[200px] task-column"
-            (dragover)="onDragOver($event)"
+            class="min-h-[200px] transition-all duration-200"
+            [ngClass]="{
+              'bg-gray-800/20 rounded-lg p-2':
+                dropTarget === TaskStatus.COMPLETED
+            }"
+            (dragover)="onDragOver($event, TaskStatus.COMPLETED)"
+            (dragleave)="onDragLeave()"
             (drop)="onDrop($event, TaskStatus.COMPLETED)"
           >
             <!-- Task Cards -->
-            <app-task-card
-              *ngFor="let task of getCompletedTasks()"
-              [task]="task"
-              (onDelete)="deleteTask($event)"
-              (onDragStart)="currentDraggedTask = task"
-            >
-            </app-task-card>
-
-            <!-- Add Task Form -->
-            <div
-              *ngIf="
-                addingColumn === TaskStatus.COMPLETED;
-                else addButtonCompleted
-              "
-            >
-              <app-task-form
-                [columnStatus]="TaskStatus.COMPLETED"
-                [listId]="currentListId!"
-                (onSave)="saveTask($event)"
-                (onCancel)="addingColumn = null"
+            <div class="space-y-3">
+              <app-task-card
+                *ngFor="let task of getCompletedTasks()"
+                [task]="task"
+                (onDelete)="deleteTask($event)"
+                (onDragStart)="startDrag($event)"
               >
-              </app-task-form>
+              </app-task-card>
             </div>
-
-            <ng-template #addButtonCompleted>
-              <button
-                (click)="addingColumn = TaskStatus.COMPLETED"
-                class="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-md flex items-center justify-center transition-colors"
-              >
-                <i class="fas fa-plus mr-2"></i> Añadir tarea
-              </button>
-            </ng-template>
           </div>
         </div>
       </div>
     </div>
   `,
-  styles: [
-    `
-      .task-column {
-        min-height: 250px;
-        transition: background-color 0.2s;
-      }
-      .task-column.drag-over {
-        background-color: rgba(14, 165, 233, 0.1);
-        border: 2px dashed rgb(14, 165, 233);
-      }
-    `,
-  ],
 })
 export class TaskListComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -205,6 +243,7 @@ export class TaskListComponent implements OnInit {
   TaskStatus = TaskStatus;
   addingColumn: TaskStatus | null = null;
   currentDraggedTask: Task | null = null;
+  dropTarget: TaskStatus | null = null;
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
@@ -255,26 +294,22 @@ export class TaskListComponent implements OnInit {
     }
   }
 
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    // Añadir clase visual para indicar zona de drop
-    if (event.currentTarget) {
-      (event.currentTarget as HTMLElement).classList.add('drag-over');
-    }
+  startDrag(event: { task: Task; event: DragEvent }): void {
+    this.currentDraggedTask = event.task;
   }
 
-  onDragLeave(event: DragEvent): void {
-    if (event.currentTarget) {
-      (event.currentTarget as HTMLElement).classList.remove('drag-over');
-    }
+  onDragOver(event: DragEvent, status: TaskStatus): void {
+    event.preventDefault();
+    this.dropTarget = status;
+  }
+
+  onDragLeave(): void {
+    this.dropTarget = null;
   }
 
   onDrop(event: DragEvent, newStatus: TaskStatus): void {
     event.preventDefault();
-
-    if (event.currentTarget) {
-      (event.currentTarget as HTMLElement).classList.remove('drag-over');
-    }
+    this.dropTarget = null;
 
     const taskId = event.dataTransfer?.getData('text/plain');
 
